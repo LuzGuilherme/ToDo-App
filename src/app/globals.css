@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  /* === TASKWHIZ DARK MODE === */
+
+  /* Backgrounds */
+  --bg-base: #0D0D0D;
+  --bg-card: #1A1A1A;
+  --bg-card-hover: #222222;
+  --bg-input: #0D0D0D;
+  --bg-elevated: #1A1A1A;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-active: rgba(255, 255, 255, 0.08);
+
+  /* Borders */
+  --border-default: #2A2A2A;
+  --border-subtle: #1F1F1F;
+  --border-accent: #333333;
+
+  /* Column Accent Colors (Vibrant for dark mode) */
+  --column-today: #6366F1;
+  --column-this-week: #A855F7;
+  --column-later: #6B7280;
+  --column-done: #22C55E;
+
+  /* Tag Colors (Bright, saturated for dark backgrounds) */
+  --tag-management: #F97316;
+  --tag-design: #EC4899;
+  --tag-development: #3B82F6;
+  --tag-research: #A855F7;
+  --tag-marketing: #22C55E;
+
+  /* Text Colors */
+  --text-primary: #F5F5F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --text-placeholder: #52525B;
+
+  /* Accent Colors */
+  --accent-blue: #6366F1;
+  --accent-green: #22C55E;
+  --accent-red: #EF4444;
+  --accent-orange: #F97316;
+  --accent-purple: #A855F7;
+  --accent-pink: #EC4899;
+
+  /* Shadows (darker for dark mode) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 4px 20px rgba(99, 102, 241, 0.15);
+
+  /* Legacy mappings for compatibility */
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --card-bg: var(--bg-card);
+  --card-border: var(--border-default);
+  --accent: var(--accent-blue);
+  --accent-hover: #4F46E5;
+  --success: var(--accent-green);
+  --warning: var(--accent-orange);
+  --danger: var(--accent-red);
+  --muted: var(--text-muted);
+}
+
+@theme inline {
+  --color-bg-base: var(--bg-base);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-input: var(--bg-input);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-column-today: var(--column-today);
+  --color-column-this-week: var(--column-this-week);
+  --color-column-later: var(--column-later);
+  --color-column-done: var(--column-done);
+  --color-tag-management: var(--tag-management);
+  --color-tag-design: var(--tag-design);
+  --color-tag-development: var(--tag-development);
+  --color-tag-research: var(--tag-research);
+  --color-tag-marketing: var(--tag-marketing);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, var(--font-sans), "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for dark mode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444444;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333333 transparent;
+}
