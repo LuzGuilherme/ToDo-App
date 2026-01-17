@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
         if (error) {
           console.error('Error linking Telegram:', error);
-          await sendMessage(chatId, '❌ Failed to connect. Please try again from the app.');
+          await sendMessage(chatId, `❌ Failed to connect: ${error.message}\n\nCode: ${error.code}`);
         } else {
           await sendMessage(
             chatId,
