@@ -53,7 +53,7 @@ export function Column({
       role="region"
       aria-label={`${config.title} column with ${tasks.length} tasks`}
       className={`
-        flex flex-col min-w-[300px] max-w-[340px] flex-1
+        flex flex-col min-w-0 flex-1
         rounded-xl transition-all overflow-hidden
         ${isDragOver
           ? `${dragOverStyles[columnId]} scale-[1.01]`
@@ -87,7 +87,7 @@ export function Column({
         )}
       </div>
 
-      <div className="flex-1 p-3 space-y-2.5 overflow-y-auto max-h-[calc(100vh-220px)]" role="list">
+      <div className="flex-1 p-3 space-y-2.5 overflow-y-auto max-h-[50vh] sm:max-h-[60vh] lg:max-h-[calc(100vh-220px)]" role="list">
         {tasks.length === 0 ? (
           <div className="text-center py-10 text-[#52525B] text-sm">
             {columnId === 'done' ? 'Complete tasks to see them here' : 'No tasks yet'}
