@@ -232,13 +232,19 @@ export function useKeyboardShortcuts({
   useEffect(() => {
     setFocusState((prev) => {
       const currentTasks = getTasksByColumn(columns[prev.columnIndex]);
+      let newTaskIndex = prev.taskIndex;
+
       if (currentTasks.length === 0) {
-        return { ...prev, taskIndex: 0 };
+        newTaskIndex = 0;
+      } else if (prev.taskIndex >= currentTasks.length) {
+        newTaskIndex = currentTasks.length - 1;
       }
-      if (prev.taskIndex >= currentTasks.length) {
-        return { ...prev, taskIndex: currentTasks.length - 1 };
+
+      // Only return a new object if the value actually changed
+      if (newTaskIndex === prev.taskIndex) {
+        return prev;
       }
-      return prev;
+      return { ...prev, taskIndex: newTaskIndex };
     });
   }, [columns, getTasksByColumn]);
 
