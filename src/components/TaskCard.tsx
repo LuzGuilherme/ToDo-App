@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { Task, getDeadlineUrgency, formatDeadline, TAG_PRESETS } from '@/types';
 
 interface TaskCardProps {
@@ -10,6 +11,8 @@ interface TaskCardProps {
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent, task: Task) => void;
   isDragging?: boolean;
+  isFocused?: boolean;
+  onFocus?: () => void;
 }
 
 export function TaskCard({
@@ -20,7 +23,19 @@ export function TaskCard({
   draggable = true,
   onDragStart,
   isDragging = false,
+  isFocused = false,
+  onFocus,
 }: TaskCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isFocused && cardRef.current) {
+      cardRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [isFocused]);
   const urgency = getDeadlineUrgency(task.deadline);
   const isCompleted = task.column === 'done';
 
@@ -36,15 +51,22 @@ export function TaskCard({
 
   return (
     <div
+      ref={cardRef}
       draggable={draggable}
       onDragStart={(e) => onDragStart?.(e, task)}
+      onClick={onFocus}
+      role="listitem"
+      tabIndex={isFocused ? 0 : -1}
+      aria-selected={isFocused}
       className={`
         group relative p-4 rounded-xl border transition-all cursor-grab active:cursor-grabbing
         ${isDragging
           ? 'opacity-50 scale-95 ring-2 ring-dashed ring-[#6366F1] bg-[#1A1A1A] border-transparent'
-          : isCompleted
-            ? 'bg-[#1A1A1A]/60 border-[#252525] opacity-60'
-            : 'bg-[#1A1A1A] border-[#252525] hover:border-[#333333] hover:shadow-[0_4px_20px_rgba(99,102,241,0.1)]'
+          : isFocused
+            ? 'bg-[#1A1A1A] border-[#6366F1] ring-2 ring-[#6366F1]/30 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+            : isCompleted
+              ? 'bg-[#1A1A1A]/60 border-[#252525] opacity-60'
+              : 'bg-[#1A1A1A] border-[#252525] hover:border-[#333333] hover:shadow-[0_4px_20px_rgba(99,102,241,0.1)]'
         }
       `}
     >

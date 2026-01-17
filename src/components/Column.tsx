@@ -15,6 +15,9 @@ interface ColumnProps {
   isDragOver: boolean;
   onAddTask?: (column: ColumnType) => void;
   draggedTaskId?: string | null;
+  isFocusedColumn?: boolean;
+  focusedTaskIndex?: number;
+  onTaskFocus?: (taskIndex: number) => void;
 }
 
 export function Column({
@@ -29,6 +32,9 @@ export function Column({
   isDragOver,
   onAddTask,
   draggedTaskId,
+  isFocusedColumn = false,
+  focusedTaskIndex = -1,
+  onTaskFocus,
 }: ColumnProps) {
   const config = COLUMN_CONFIG[columnId];
 
@@ -44,12 +50,16 @@ export function Column({
     <div
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, columnId)}
+      role="region"
+      aria-label={`${config.title} column with ${tasks.length} tasks`}
       className={`
         flex flex-col min-w-[300px] max-w-[340px] flex-1
         rounded-xl transition-all overflow-hidden
         ${isDragOver
           ? `${dragOverStyles[columnId]} scale-[1.01]`
-          : 'bg-[#141414] border border-[#1F1F1F]'
+          : isFocusedColumn
+            ? 'bg-[#141414] border-2 border-[#6366F1]/50'
+            : 'bg-[#141414] border border-[#1F1F1F]'
         }
       `}
     >
@@ -77,13 +87,13 @@ export function Column({
         )}
       </div>
 
-      <div className="flex-1 p-3 space-y-2.5 overflow-y-auto max-h-[calc(100vh-220px)]">
+      <div className="flex-1 p-3 space-y-2.5 overflow-y-auto max-h-[calc(100vh-220px)]" role="list">
         {tasks.length === 0 ? (
           <div className="text-center py-10 text-[#52525B] text-sm">
             {columnId === 'done' ? 'Complete tasks to see them here' : 'No tasks yet'}
           </div>
         ) : (
-          tasks.map((task) => (
+          tasks.map((task, index) => (
             <TaskCard
               key={task.id}
               task={task}
@@ -92,6 +102,8 @@ export function Column({
               onComplete={onCompleteTask}
               onDragStart={onDragStart}
               isDragging={draggedTaskId === task.id}
+              isFocused={isFocusedColumn && focusedTaskIndex === index}
+              onFocus={() => onTaskFocus?.(index)}
             />
           ))
         )}

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Task, ColumnType, TaskTag, RecurrenceConfig } from '@/types';
 import { useSupabaseTasks } from '@/hooks/useSupabaseTasks';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAccountability } from '@/hooks/useAccountability';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useAuth } from '@/contexts/AuthContext';
 import { Column } from './Column';
 import { TaskModal } from './TaskModal';
@@ -14,6 +15,7 @@ import { StaleTaskModal } from './StaleTaskModal';
 import { FocusModeToggle } from './FocusModeToggle';
 import { TelegramConnect } from './TelegramConnect';
 import { StatsModal } from './StatsModal';
+import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 
 export function SupabaseKanbanBoard() {
   const { user, signOut } = useAuth();
@@ -27,6 +29,9 @@ export function SupabaseKanbanBoard() {
   const [currentStaleTask, setCurrentStaleTask] = useState<Task | null>(null);
   const [showTelegramSettings, setShowTelegramSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
+
+  const columns: ColumnType[] = ['today', 'this_week', 'later', 'done'];
+  const modalFormRef = useRef<HTMLFormElement>(null);
 
   // Notifications hook
   const {
@@ -48,6 +53,48 @@ export function SupabaseKanbanBoard() {
     getStaleTasks,
     dismissStaleTask,
   } = useAccountability(tasks);
+
+  // Check if any modal is open (for keyboard shortcuts)
+  const anyModalOpen = isModalOpen || showMorningCommitment || currentStaleTask !== null || showTelegramSettings || showStats;
+
+  // Keyboard shortcuts hook
+  const {
+    focusState,
+    setFocusState,
+    focusedColumn,
+    isKeyboardNavigating,
+  } = useKeyboardShortcuts({
+    columns,
+    getTasksByColumn,
+    onOpenModal: () => {
+      setEditingTask(null);
+      setIsModalOpen(true);
+    },
+    onEditTask: (task) => {
+      setEditingTask(task);
+      setIsModalOpen(true);
+    },
+    onCompleteTask: async (id) => {
+      const task = tasks.find((t) => t.id === id);
+      if (!task) return;
+      const newColumn = task.column === 'done' ? 'today' : 'done';
+      const wasNotDone = task.column !== 'done';
+      const isNowDone = newColumn === 'done';
+      await moveTask(id, newColumn);
+      if (wasNotDone && isNowDone) {
+        setShowCelebration(true);
+      }
+    },
+    onDeleteTask: deleteTask,
+    isModalOpen: anyModalOpen,
+    onSaveModal: () => {
+      modalFormRef.current?.requestSubmit();
+    },
+    onCloseModal: () => {
+      setIsModalOpen(false);
+      setEditingTask(null);
+    },
+  });
 
   // Check for morning commitment on mount (run once)
   const [hasCheckedMorning, setHasCheckedMorning] = useState(false);
@@ -207,8 +254,6 @@ export function SupabaseKanbanBoard() {
     setCurrentStaleTask(null);
   };
 
-  const columns: ColumnType[] = ['today', 'this_week', 'later', 'done'];
-
   const totalTasks = tasks.filter((t) => t.column !== 'done').length;
   const overdueTasks = tasks.filter((t) => {
     if (t.column === 'done') return false;
@@ -325,7 +370,7 @@ export function SupabaseKanbanBoard() {
       {/* Kanban Board */}
       <main className="max-w-7xl mx-auto px-6 py-5">
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {columns.map((columnId) => (
+          {columns.map((columnId, columnIndex) => (
             <div
               key={columnId}
               onDragEnter={() => handleDragEnter(columnId)}
@@ -343,6 +388,14 @@ export function SupabaseKanbanBoard() {
                 isDragOver={dragOverColumn === columnId}
                 onAddTask={() => setIsModalOpen(true)}
                 draggedTaskId={draggedTask?.id ?? null}
+                isFocusedColumn={isKeyboardNavigating && focusedColumn === columnId}
+                focusedTaskIndex={isKeyboardNavigating && focusedColumn === columnId ? focusState.taskIndex : -1}
+                onTaskFocus={(taskIndex) => {
+                  setFocusState({
+                    columnIndex,
+                    taskIndex,
+                  });
+                }}
               />
             </div>
           ))}
@@ -356,6 +409,7 @@ export function SupabaseKanbanBoard() {
         onSave={handleSaveTask}
         onUpdate={handleUpdateTask}
         editingTask={editingTask}
+        formRef={modalFormRef}
       />
 
       {/* Morning Commitment Modal */}
@@ -395,6 +449,9 @@ export function SupabaseKanbanBoard() {
           </div>
         </div>
       )}
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp />
     </div>
   );
 }

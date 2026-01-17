@@ -128,6 +128,12 @@ export function formatDeadline(deadline: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+// Keyboard navigation types
+export interface FocusState {
+  columnIndex: number;  // 0-3 for today, this_week, later, done
+  taskIndex: number;    // -1 = column level, 0+ = task index
+}
+
 // Stats types
 export type TimeRange = '7d' | '30d' | '90d' | 'all';
 

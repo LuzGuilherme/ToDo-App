@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, RefObject } from 'react';
 import { Task, TaskTag, TagType, TAG_PRESETS, RecurrencePattern, RecurrenceConfig } from '@/types';
 
 interface TaskModalProps {
@@ -9,9 +9,10 @@ interface TaskModalProps {
   onSave: (title: string, deadline: string, notes: string, tags: TaskTag[], recurrence?: RecurrenceConfig) => void;
   onUpdate?: (id: string, updates: Partial<Task>) => void;
   editingTask?: Task | null;
+  formRef?: RefObject<HTMLFormElement | null>;
 }
 
-export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask, formRef }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [deadline, setDeadline] = useState('');
   const [notes, setNotes] = useState('');
@@ -101,7 +102,7 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
           {editingTask ? 'Edit Task' : 'New Task'}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-[#A1A1AA] mb-2">
               Task Title <span className="text-[#EF4444]">*</span>
