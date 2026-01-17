@@ -48,6 +48,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  return processReminders();
+}
+
+// GET handler for Vercel Cron jobs
+export async function GET(request: NextRequest) {
+  // Verify cron secret for Vercel Cron jobs
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Reuse POST logic by creating a mock request
+  return processReminders();
+}
+
+async function processReminders() {
   try {
     const supabase = getSupabase();
     const now = new Date();
@@ -154,12 +172,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Also support GET for easy testing/debugging
-export async function GET() {
-  return NextResponse.json({
-    status: 'Reminder processor active',
-    note: 'Use POST to process reminders',
-  });
 }
