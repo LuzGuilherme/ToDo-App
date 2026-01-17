@@ -6,6 +6,27 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Task, ColumnType, TaskTag, RecurrenceConfig } from '@/types';
 import { calculateNextDeadline } from '@/utils/recurrence';
 
+// Determine the appropriate column based on deadline
+function getColumnForDeadline(deadline: string): ColumnType {
+  const deadlineDate = new Date(deadline);
+  const now = new Date();
+
+  // Reset time to compare dates only
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const deadlineDay = new Date(deadlineDate.getFullYear(), deadlineDate.getMonth(), deadlineDate.getDate());
+
+  const diffTime = deadlineDay.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) {
+    return 'today'; // Due today or overdue
+  } else if (diffDays <= 7) {
+    return 'this_week'; // Due within the next 7 days
+  } else {
+    return 'later'; // Due later
+  }
+}
+
 // Database row type
 interface DbTask {
   id: string;
@@ -140,6 +161,8 @@ export function useSupabaseTasks() {
       if (!user) return null;
 
       try {
+        const column = getColumnForDeadline(deadline);
+
         const { data, error } = await supabase
           .from('tasks')
           .insert({
@@ -147,6 +170,7 @@ export function useSupabaseTasks() {
             title,
             notes,
             deadline,
+            column_type: column,
             tags: JSON.stringify(tags),
             recurrence_pattern: recurrence?.pattern ?? null,
             recurrence_end_date: recurrence?.endDate ?? null,
@@ -248,12 +272,14 @@ export function useSupabaseTasks() {
       if (!nextDeadline) return;
 
       try {
+        const column = getColumnForDeadline(nextDeadline);
+
         const { error } = await supabase.from('tasks').insert({
           user_id: user.id,
           title: completedTask.title,
           notes: completedTask.notes,
           deadline: nextDeadline,
-          column_type: 'later',
+          column_type: column,
           tags: JSON.stringify(completedTask.tags),
           recurrence_pattern: completedTask.recurrencePattern,
           recurrence_end_date: completedTask.recurrenceEndDate,
