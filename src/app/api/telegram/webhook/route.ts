@@ -49,14 +49,16 @@ export async function POST(request: NextRequest) {
         // The connect code is the user_id from our app
         const userId = connectCode;
 
-        // Update user settings with telegram chat ID
+        // Upsert user settings with telegram chat ID
         const { error } = await supabase
           .from('user_settings')
-          .update({
+          .upsert({
+            user_id: userId,
             telegram_chat_id: chatId,
             updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
+          }, {
+            onConflict: 'user_id'
+          });
 
         if (error) {
           console.error('Error linking Telegram:', error);
