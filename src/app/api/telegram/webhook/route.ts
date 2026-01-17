@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { parseTaskMessage, getColumnForDeadline } from '@/lib/taskParser';
+import {
+  formatTaskConfirmation,
+  formatParseError,
+  formatHelpMessage,
+  formatDatabaseError,
+  formatNotConnectedMessage,
+} from '@/lib/telegramMessages';
 
 // Create Supabase client lazily to avoid build-time errors
 function getSupabase() {
@@ -66,13 +74,13 @@ export async function POST(request: NextRequest) {
         } else {
           await sendMessage(
             chatId,
-            `✅ <b>Connected successfully!</b>\n\nHey ${username}! Your Telegram is now linked to Accountability.\n\nYou'll receive:\n• Task reminders\n• Daily summaries\n• Overdue alerts\n\nStay productive! 💪`
+            `✅ <b>Connected successfully!</b>\n\nHey ${username}! Your Telegram is now linked to Accountability.\n\nYou can now:\n• <b>Create tasks</b> by sending a message (e.g., "Buy groceries tomorrow")\n• Receive task reminders\n• Get daily summaries\n• Get overdue alerts\n\nSend /help for more info. Stay productive! 💪`
           );
         }
       } else {
         await sendMessage(
           chatId,
-          `👋 <b>Welcome to Accountability Bot!</b>\n\nTo connect your account, please use the "Connect Telegram" button in the app.\n\nThis will link your Telegram to receive task reminders.`
+          `👋 <b>Welcome to Accountability Bot!</b>\n\nTo connect your account, please use the "Connect Telegram" button in the app.\n\nOnce connected, you can:\n• Create tasks by sending a message\n• Receive reminders and alerts\n\nSend /help for more info.`
         );
       }
     }
@@ -103,6 +111,18 @@ export async function POST(request: NextRequest) {
       if (!error) {
         await sendMessage(chatId, '👋 Disconnected! You will no longer receive reminders.');
       }
+      return NextResponse.json({ ok: true });
+    }
+
+    // Handle /help command
+    if (text === '/help') {
+      await sendMessage(chatId, formatHelpMessage());
+      return NextResponse.json({ ok: true });
+    }
+
+    // Handle task creation from plain messages (non-commands)
+    if (!text.startsWith('/')) {
+      await handleTaskCreation(chatId, text, supabase);
     }
 
     return NextResponse.json({ ok: true });
@@ -125,6 +145,54 @@ async function sendMessage(chatId: string, text: string) {
       parse_mode: 'HTML',
     }),
   });
+}
+
+async function handleTaskCreation(
+  chatId: string,
+  text: string,
+  supabase: SupabaseClient
+) {
+  // Look up user by telegram_chat_id
+  const { data: settings } = await supabase
+    .from('user_settings')
+    .select('user_id')
+    .eq('telegram_chat_id', chatId)
+    .single();
+
+  if (!settings) {
+    await sendMessage(chatId, formatNotConnectedMessage());
+    return;
+  }
+
+  // Parse the message
+  const result = parseTaskMessage(text);
+
+  if (!result.success || !result.task) {
+    await sendMessage(chatId, formatParseError(result));
+    return;
+  }
+
+  // Determine column based on deadline
+  const column = getColumnForDeadline(result.task.deadline);
+
+  // Insert task into database
+  const { error } = await supabase.from('tasks').insert({
+    user_id: settings.user_id,
+    title: result.task.title,
+    deadline: result.task.deadline.toISOString(),
+    column_type: column,
+    tags: JSON.stringify(result.task.tags),
+    notes: '',
+  });
+
+  if (error) {
+    console.error('Failed to create task:', error);
+    await sendMessage(chatId, formatDatabaseError());
+    return;
+  }
+
+  // Send confirmation
+  await sendMessage(chatId, formatTaskConfirmation(result.task, column, result.warning));
 }
 
 // Verify webhook is working
