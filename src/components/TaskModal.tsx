@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Task, TaskTag, TagType, TAG_PRESETS } from '@/types';
+import { Task, TaskTag, TagType, TAG_PRESETS, RecurrencePattern, RecurrenceConfig } from '@/types';
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, deadline: string, notes: string, tags: TaskTag[]) => void;
+  onSave: (title: string, deadline: string, notes: string, tags: TaskTag[], recurrence?: RecurrenceConfig) => void;
   onUpdate?: (id: string, updates: Partial<Task>) => void;
   editingTask?: Task | null;
 }
@@ -16,6 +16,9 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
   const [deadline, setDeadline] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
+  const [recurrencePattern, setRecurrencePattern] = useState<RecurrencePattern>(null);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
+  const [hasEndDate, setHasEndDate] = useState(false);
 
   useEffect(() => {
     if (editingTask) {
@@ -23,11 +26,17 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
       setDeadline(editingTask.deadline.split('T')[0]);
       setNotes(editingTask.notes);
       setSelectedTags(editingTask.tags?.map((t) => t.type) ?? []);
+      setRecurrencePattern(editingTask.recurrencePattern);
+      setRecurrenceEndDate(editingTask.recurrenceEndDate?.split('T')[0] ?? '');
+      setHasEndDate(!!editingTask.recurrenceEndDate);
     } else {
       setTitle('');
       setDeadline(getTomorrowDate());
       setNotes('');
       setSelectedTags([]);
+      setRecurrencePattern(null);
+      setRecurrenceEndDate('');
+      setHasEndDate(false);
     }
   }, [editingTask, isOpen]);
 
@@ -54,15 +63,28 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
       type,
     }));
 
+    const recurrence: RecurrenceConfig | undefined = recurrencePattern
+      ? {
+          pattern: recurrencePattern,
+          endDate: hasEndDate && recurrenceEndDate ? new Date(recurrenceEndDate).toISOString() : null,
+          dayOfWeek: recurrencePattern === 'weekly' ? new Date(deadline).getDay() : null,
+          dayOfMonth: recurrencePattern === 'monthly' ? new Date(deadline).getDate() : null,
+        }
+      : undefined;
+
     if (editingTask && onUpdate) {
       onUpdate(editingTask.id, {
         title: title.trim(),
         deadline: deadlineISO,
         notes: notes.trim(),
         tags,
+        recurrencePattern: recurrence?.pattern ?? null,
+        recurrenceEndDate: recurrence?.endDate ?? null,
+        recurrenceDayOfWeek: recurrence?.dayOfWeek ?? null,
+        recurrenceDayOfMonth: recurrence?.dayOfMonth ?? null,
       });
     } else {
-      onSave(title.trim(), deadlineISO, notes.trim(), tags);
+      onSave(title.trim(), deadlineISO, notes.trim(), tags, recurrence);
     }
 
     onClose();
@@ -141,6 +163,71 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Recurrence Section */}
+          <div>
+            <label className="block text-sm font-medium text-[#A1A1AA] mb-2">
+              Repeat
+            </label>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                {[
+                  { value: null, label: 'Never' },
+                  { value: 'daily', label: 'Daily' },
+                  { value: 'weekly', label: 'Weekly' },
+                  { value: 'monthly', label: 'Monthly' },
+                ].map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => setRecurrencePattern(option.value as RecurrencePattern)}
+                    className={`
+                      px-3 py-2 rounded-lg text-sm font-medium transition-all
+                      ${
+                        recurrencePattern === option.value
+                          ? 'bg-[#6366F1] text-white'
+                          : 'bg-[#0D0D0D] text-[#A1A1AA] hover:bg-[#252525] border border-[#2A2A2A]'
+                      }
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {recurrencePattern && (
+                <div className="pl-1 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasEndDate}
+                      onChange={(e) => setHasEndDate(e.target.checked)}
+                      className="w-4 h-4 rounded border-[#2A2A2A] bg-[#0D0D0D] text-[#6366F1] focus:ring-[#6366F1]/30"
+                    />
+                    <span className="text-sm text-[#A1A1AA]">Set end date</span>
+                  </label>
+
+                  {hasEndDate && (
+                    <input
+                      type="date"
+                      value={recurrenceEndDate}
+                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                      min={deadline}
+                      className="w-full px-4 py-3 bg-[#0D0D0D] border border-[#2A2A2A] rounded-xl text-[#F5F5F5] focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1]/30 transition-all"
+                    />
+                  )}
+
+                  <p className="text-xs text-[#52525B] italic">
+                    {recurrencePattern === 'daily' && 'Task will repeat every day'}
+                    {recurrencePattern === 'weekly' &&
+                      `Task will repeat every ${new Date(deadline || Date.now()).toLocaleDateString('en-US', { weekday: 'long' })}`}
+                    {recurrencePattern === 'monthly' &&
+                      `Task will repeat on day ${new Date(deadline || Date.now()).getDate()} of each month`}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

@@ -2,6 +2,8 @@ export type ColumnType = 'today' | 'this_week' | 'later' | 'done';
 
 export type ReminderFrequency = 'hourly' | 'few_hours' | 'twice_daily';
 
+export type RecurrencePattern = 'daily' | 'weekly' | 'monthly' | null;
+
 export type TagType = 'management' | 'design' | 'development' | 'research' | 'marketing';
 
 export interface TaskTag {
@@ -32,6 +34,18 @@ export interface Task {
   lastRemindedAt: string | null;
   escalationLevel: number; // 0 = none, 1 = gentle, 2 = firm, 3 = urgent
   tags: TaskTag[];
+  // Recurrence fields
+  recurrencePattern: RecurrencePattern;
+  recurrenceEndDate: string | null;
+  recurrenceDayOfWeek: number | null; // 0-6 (Sunday-Saturday)
+  recurrenceDayOfMonth: number | null; // 1-31
+}
+
+export interface RecurrenceConfig {
+  pattern: RecurrencePattern;
+  endDate?: string | null;
+  dayOfWeek?: number | null;
+  dayOfMonth?: number | null;
 }
 
 export interface Column {
@@ -62,7 +76,13 @@ export const COLUMN_CONFIG: Record<ColumnType, { title: string; color: string; a
   done: { title: 'Done', color: 'text-[#22C55E]', accentColor: '#22C55E' },
 };
 
-export function createTask(title: string, deadline: string, notes: string = '', tags: TaskTag[] = []): Task {
+export function createTask(
+  title: string,
+  deadline: string,
+  notes: string = '',
+  tags: TaskTag[] = [],
+  recurrence?: RecurrenceConfig
+): Task {
   return {
     id: crypto.randomUUID(),
     title,
@@ -77,6 +97,10 @@ export function createTask(title: string, deadline: string, notes: string = '', 
     lastRemindedAt: null,
     escalationLevel: 0,
     tags,
+    recurrencePattern: recurrence?.pattern ?? null,
+    recurrenceEndDate: recurrence?.endDate ?? null,
+    recurrenceDayOfWeek: recurrence?.dayOfWeek ?? null,
+    recurrenceDayOfMonth: recurrence?.dayOfMonth ?? null,
   };
 }
 

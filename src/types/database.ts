@@ -26,6 +26,10 @@ export interface Database {
           escalation_level: number;
           tags: Json;
           updated_at: string;
+          recurrence_pattern: 'daily' | 'weekly' | 'monthly' | null;
+          recurrence_end_date: string | null;
+          recurrence_day_of_week: number | null;
+          recurrence_day_of_month: number | null;
         };
         Insert: {
           id?: string;
@@ -43,6 +47,10 @@ export interface Database {
           escalation_level?: number;
           tags?: Json;
           updated_at?: string;
+          recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | null;
+          recurrence_end_date?: string | null;
+          recurrence_day_of_week?: number | null;
+          recurrence_day_of_month?: number | null;
         };
         Update: {
           id?: string;
@@ -60,6 +68,10 @@ export interface Database {
           escalation_level?: number;
           tags?: Json;
           updated_at?: string;
+          recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | null;
+          recurrence_end_date?: string | null;
+          recurrence_day_of_week?: number | null;
+          recurrence_day_of_month?: number | null;
         };
       };
       user_settings: {

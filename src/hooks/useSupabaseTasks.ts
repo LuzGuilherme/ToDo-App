@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Task, ColumnType, TaskTag } from '@/types';
+import { Task, ColumnType, TaskTag, RecurrenceConfig } from '@/types';
+import { calculateNextDeadline } from '@/utils/recurrence';
 
 // Database row type
 interface DbTask {
@@ -21,6 +22,10 @@ interface DbTask {
   last_reminded_at: string | null;
   escalation_level: number;
   tags: unknown;
+  recurrence_pattern: 'daily' | 'weekly' | 'monthly' | null;
+  recurrence_end_date: string | null;
+  recurrence_day_of_week: number | null;
+  recurrence_day_of_month: number | null;
 }
 
 // Convert database row to app Task type
@@ -53,6 +58,10 @@ function dbToTask(dbTask: DbTask): Task {
     lastRemindedAt: dbTask.last_reminded_at,
     escalationLevel: dbTask.escalation_level,
     tags,
+    recurrencePattern: dbTask.recurrence_pattern,
+    recurrenceEndDate: dbTask.recurrence_end_date,
+    recurrenceDayOfWeek: dbTask.recurrence_day_of_week,
+    recurrenceDayOfMonth: dbTask.recurrence_day_of_month,
   };
 }
 
@@ -121,7 +130,13 @@ export function useSupabaseTasks() {
   }, [user, supabase, fetchTasks]);
 
   const addTask = useCallback(
-    async (title: string, deadline: string, notes: string = '', tags: TaskTag[] = []) => {
+    async (
+      title: string,
+      deadline: string,
+      notes: string = '',
+      tags: TaskTag[] = [],
+      recurrence?: RecurrenceConfig
+    ) => {
       if (!user) return null;
 
       try {
@@ -133,6 +148,10 @@ export function useSupabaseTasks() {
             notes,
             deadline,
             tags: JSON.stringify(tags),
+            recurrence_pattern: recurrence?.pattern ?? null,
+            recurrence_end_date: recurrence?.endDate ?? null,
+            recurrence_day_of_week: recurrence?.dayOfWeek ?? null,
+            recurrence_day_of_month: recurrence?.dayOfMonth ?? null,
           })
           .select()
           .single();
@@ -168,6 +187,10 @@ export function useSupabaseTasks() {
         if (updates.lastRemindedAt !== undefined) dbUpdates.last_reminded_at = updates.lastRemindedAt;
         if (updates.escalationLevel !== undefined) dbUpdates.escalation_level = updates.escalationLevel;
         if (updates.tags !== undefined) dbUpdates.tags = JSON.stringify(updates.tags);
+        if (updates.recurrencePattern !== undefined) dbUpdates.recurrence_pattern = updates.recurrencePattern;
+        if (updates.recurrenceEndDate !== undefined) dbUpdates.recurrence_end_date = updates.recurrenceEndDate;
+        if (updates.recurrenceDayOfWeek !== undefined) dbUpdates.recurrence_day_of_week = updates.recurrenceDayOfWeek;
+        if (updates.recurrenceDayOfMonth !== undefined) dbUpdates.recurrence_day_of_month = updates.recurrenceDayOfMonth;
 
         const { error } = await supabase
           .from('tasks')
@@ -208,6 +231,47 @@ export function useSupabaseTasks() {
     [user, supabase]
   );
 
+  // Create next instance of a recurring task
+  const createNextRecurringInstance = useCallback(
+    async (completedTask: Task) => {
+      if (!user || !completedTask.recurrencePattern) return;
+
+      const nextDeadline = calculateNextDeadline({
+        pattern: completedTask.recurrencePattern,
+        currentDeadline: completedTask.deadline,
+        endDate: completedTask.recurrenceEndDate,
+        dayOfWeek: completedTask.recurrenceDayOfWeek,
+        dayOfMonth: completedTask.recurrenceDayOfMonth,
+      });
+
+      // Don't create if past end date
+      if (!nextDeadline) return;
+
+      try {
+        const { error } = await supabase.from('tasks').insert({
+          user_id: user.id,
+          title: completedTask.title,
+          notes: completedTask.notes,
+          deadline: nextDeadline,
+          column_type: 'later',
+          tags: JSON.stringify(completedTask.tags),
+          recurrence_pattern: completedTask.recurrencePattern,
+          recurrence_end_date: completedTask.recurrenceEndDate,
+          recurrence_day_of_week: completedTask.recurrenceDayOfWeek,
+          recurrence_day_of_month: completedTask.recurrenceDayOfMonth,
+        });
+
+        if (error) {
+          console.error('Failed to create recurring task instance:', error);
+        }
+        // Real-time subscription will auto-refresh the task list
+      } catch (err) {
+        console.error('Failed to create recurring task instance:', err);
+      }
+    },
+    [user, supabase]
+  );
+
   const moveTask = useCallback(
     async (id: string, column: ColumnType) => {
       const task = tasks.find((t) => t.id === id);
@@ -217,13 +281,18 @@ export function useSupabaseTasks() {
 
       if (column === 'done' && !task.completedAt) {
         updates.completedAt = new Date().toISOString();
+
+        // Create next instance for recurring tasks
+        if (task.recurrencePattern) {
+          await createNextRecurringInstance(task);
+        }
       } else if (column !== 'done' && task.completedAt) {
         updates.completedAt = null;
       }
 
       await updateTask(id, updates);
     },
-    [tasks, updateTask]
+    [tasks, updateTask, createNextRecurringInstance]
   );
 
   const getTasksByColumn = useCallback(

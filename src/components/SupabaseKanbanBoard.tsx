@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Task, ColumnType, TaskTag } from '@/types';
+import { Task, ColumnType, TaskTag, RecurrenceConfig } from '@/types';
 import { useSupabaseTasks } from '@/hooks/useSupabaseTasks';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAccountability } from '@/hooks/useAccountability';
@@ -141,8 +141,14 @@ export function SupabaseKanbanBoard() {
     setEditingTask(null);
   };
 
-  const handleSaveTask = async (title: string, deadline: string, notes: string, tags: TaskTag[] = []) => {
-    await addTask(title, deadline, notes, tags);
+  const handleSaveTask = async (
+    title: string,
+    deadline: string,
+    notes: string,
+    tags: TaskTag[] = [],
+    recurrence?: RecurrenceConfig
+  ) => {
+    await addTask(title, deadline, notes, tags, recurrence);
   };
 
   const handleUpdateTask = async (id: string, updates: Partial<Task>) => {

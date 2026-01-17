@@ -97,13 +97,22 @@ export function TaskCard({
             <p className="text-xs text-[#71717A] mt-1.5 line-clamp-2">{task.notes}</p>
           )}
 
-          <div className="flex items-center gap-2 mt-3">
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
             <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg ${urgencyColors[urgency]}`}>
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               {formatDeadline(task.deadline)}
             </span>
+
+            {task.recurrencePattern && (
+              <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-[#6366F1]/20 text-[#6366F1]">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {task.recurrencePattern === 'daily' ? 'Daily' : task.recurrencePattern === 'weekly' ? 'Weekly' : 'Monthly'}
+              </span>
+            )}
 
             {task.delegatedTo && (
               <span className="text-xs px-2.5 py-1 rounded-lg bg-[#A855F7]/20 text-[#A855F7]">
