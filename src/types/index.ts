@@ -56,10 +56,10 @@ export interface AppState {
 }
 
 export const COLUMN_CONFIG: Record<ColumnType, { title: string; color: string; accentColor: string }> = {
-  today: { title: 'To Do', color: 'text-[#6366F1]', accentColor: '#6366F1' },
-  this_week: { title: 'In Progress', color: 'text-[#A855F7]', accentColor: '#A855F7' },
+  today: { title: 'Today', color: 'text-[#6366F1]', accentColor: '#6366F1' },
+  this_week: { title: 'This Week', color: 'text-[#A855F7]', accentColor: '#A855F7' },
   later: { title: 'Later', color: 'text-[#6B7280]', accentColor: '#6B7280' },
-  done: { title: 'Complete', color: 'text-[#22C55E]', accentColor: '#22C55E' },
+  done: { title: 'Done', color: 'text-[#22C55E]', accentColor: '#22C55E' },
 };
 
 export function createTask(title: string, deadline: string, notes: string = '', tags: TaskTag[] = []): Task {
