@@ -1,4 +1,5 @@
 import * as chrono from 'chrono-node';
+import * as chronoPt from 'chrono-node/pt';
 import { TaskTag, TagType, TAG_PRESETS } from '@/types';
 
 export interface ParsedTask {
@@ -16,36 +17,51 @@ export interface ParseResult {
   warning?: string;
 }
 
-// Map common hashtags to our tag types
+// Map common hashtags to our tag types (English + Portuguese)
 const HASHTAG_MAP: Record<string, TagType> = {
-  // Management
+  // Management (EN)
   'management': 'management',
   'mgmt': 'management',
   'work': 'management',
   'meeting': 'management',
   'admin': 'management',
-  // Design
+  // Management (PT)
+  'gestao': 'management',
+  'trabalho': 'management',
+  'reuniao': 'management',
+  // Design (EN)
   'design': 'design',
   'ui': 'design',
   'ux': 'design',
   'figma': 'design',
-  // Development
+  // Development (EN)
   'development': 'development',
   'dev': 'development',
   'code': 'development',
   'coding': 'development',
   'bug': 'development',
   'feature': 'development',
-  // Research
+  // Development (PT)
+  'codigo': 'development',
+  'programacao': 'development',
+  // Research (EN)
   'research': 'research',
   'learn': 'research',
   'study': 'research',
   'read': 'research',
-  // Marketing
+  // Research (PT)
+  'pesquisa': 'research',
+  'estudo': 'research',
+  'aprender': 'research',
+  'ler': 'research',
+  // Marketing (EN)
   'marketing': 'marketing',
   'mktg': 'marketing',
   'social': 'marketing',
   'content': 'marketing',
+  // Marketing (PT)
+  'conteudo': 'marketing',
+  'redes': 'marketing',
 };
 
 /**
@@ -105,9 +121,15 @@ export function parseTaskMessage(message: string, referenceDate?: Date): ParseRe
     };
   }
 
-  // Parse date/time using chrono-node
+  // Parse date/time using chrono-node (try both English and Portuguese)
   const ref = referenceDate || new Date();
-  const parsed = chrono.parse(cleanMessage, ref, { forwardDate: true });
+  const parsedEn = chrono.parse(cleanMessage, ref, { forwardDate: true });
+  const parsedPt = chronoPt.parse(cleanMessage, ref, { forwardDate: true });
+
+  // Use whichever parser found a result (prefer the one with longer match for accuracy)
+  const parsed = parsedEn.length > 0 && parsedPt.length > 0
+    ? (parsedEn[0].text.length >= parsedPt[0].text.length ? parsedEn : parsedPt)
+    : (parsedEn.length > 0 ? parsedEn : parsedPt);
 
   let deadline: Date;
   let title: string;
@@ -123,10 +145,10 @@ export function parseTaskMessage(message: string, referenceDate?: Date): ParseRe
     // Extract title by removing the date text
     title = cleanMessage.replace(result.text, '').trim();
 
-    // Clean up common prepositions left behind
+    // Clean up common prepositions left behind (English + Portuguese)
     title = title
-      .replace(/\b(by|on|at|for|until|before|due)\s*$/i, '')
-      .replace(/^\s*(by|on|at|for|until|before|due)\b/i, '')
+      .replace(/\b(by|on|at|for|until|before|due|para|ate|até|em|no|na|às|as)\s*$/i, '')
+      .replace(/^\s*(by|on|at|for|until|before|due|para|ate|até|em|no|na|às|as)\b/i, '')
       .trim()
       .replace(/\s+/g, ' ');
 

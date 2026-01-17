@@ -105,22 +105,24 @@ export function formatHelpMessage(): string {
 <b>Create tasks by sending a message:</b>
 • "Buy groceries tomorrow"
 • "Call mom on Friday"
-• "Meeting at 3pm next Monday"
-• "Submit report by Jan 20 #work"
+• "Comprar pão amanhã"
+• "Reunião segunda às 15h #trabalho"
 
 <b>Supported tags:</b>
 #management #design #development
 #research #marketing
 
-<b>Tag shortcuts:</b>
+<b>Tag shortcuts (EN/PT):</b>
 #work #dev #code #ui #learn
+#trabalho #gestao #pesquisa #estudo
 
-<b>Date formats:</b>
-• "tomorrow", "today"
-• "next Monday", "this Friday"
-• "in 3 days", "in 2 weeks"
-• "January 20th", "Jan 20"
-• Times: "at 3pm", "at 14:00"
+<b>Date formats (EN):</b>
+• "tomorrow", "today", "next Monday"
+• "in 3 days", "January 20th"
+
+<b>Date formats (PT):</b>
+• "amanhã", "hoje", "próxima segunda"
+• "em 3 dias", "20 de janeiro"
 
 <b>Commands:</b>
 /status - Check connection status
