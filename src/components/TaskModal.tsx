@@ -31,7 +31,7 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
       setHasEndDate(!!editingTask.recurrenceEndDate);
     } else {
       setTitle('');
-      setDeadline(getTomorrowDate());
+      setDeadline(getTodayDate());
       setNotes('');
       setSelectedTags([]);
       setRecurrencePattern(null);
@@ -40,10 +40,8 @@ export function TaskModal({ isOpen, onClose, onSave, onUpdate, editingTask }: Ta
     }
   }, [editingTask, isOpen]);
 
-  function getTomorrowDate() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+  function getTodayDate() {
+    return new Date().toISOString().split('T')[0];
   }
 
   const handleToggleTag = (type: TagType) => {
