@@ -127,3 +127,17 @@ export function formatDeadline(deadline: string): string {
 
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+// Stats types
+export type TimeRange = '7d' | '30d' | '90d' | 'all';
+
+export interface TaskStats {
+  totalCompleted: number;
+  totalActive: number;
+  completionRate: number;
+  onTimeRate: number;
+  averageCompletionDays: number;
+  currentStreak: number;
+  completionsByDay: Array<{ date: string; count: number }>;
+  columnDistribution: Record<ColumnType, number>;
+}

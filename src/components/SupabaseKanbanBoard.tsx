@@ -13,6 +13,7 @@ import { MorningCommitmentModal } from './MorningCommitmentModal';
 import { StaleTaskModal } from './StaleTaskModal';
 import { FocusModeToggle } from './FocusModeToggle';
 import { TelegramConnect } from './TelegramConnect';
+import { StatsModal } from './StatsModal';
 
 export function SupabaseKanbanBoard() {
   const { user, signOut } = useAuth();
@@ -25,6 +26,7 @@ export function SupabaseKanbanBoard() {
   const [showMorningCommitment, setShowMorningCommitment] = useState(false);
   const [currentStaleTask, setCurrentStaleTask] = useState<Task | null>(null);
   const [showTelegramSettings, setShowTelegramSettings] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   // Notifications hook
   const {
@@ -276,6 +278,17 @@ export function SupabaseKanbanBoard() {
               />
 
               <button
+                onClick={() => setShowStats(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#1A1A1A] text-[#A1A1AA] rounded-lg hover:bg-[#252525] hover:text-[#F5F5F5] transition-all border border-[#2A2A2A]"
+                title="View stats"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Stats
+              </button>
+
+              <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-[#6366F1] text-white rounded-lg hover:bg-[#4F46E5] transition-all font-medium shadow-lg shadow-[#6366F1]/20"
               >
@@ -366,6 +379,9 @@ export function SupabaseKanbanBoard() {
 
       {/* Celebration */}
       <Celebration show={showCelebration} onComplete={() => setShowCelebration(false)} />
+
+      {/* Stats Modal */}
+      <StatsModal isOpen={showStats} onClose={() => setShowStats(false)} tasks={tasks} />
 
       {/* Telegram Settings Modal */}
       {showTelegramSettings && (
