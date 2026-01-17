@@ -9,6 +9,7 @@ interface TaskCardProps {
   onComplete: (id: string) => void;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent, task: Task) => void;
+  isDragging?: boolean;
 }
 
 export function TaskCard({
@@ -18,6 +19,7 @@ export function TaskCard({
   onComplete,
   draggable = true,
   onDragStart,
+  isDragging = false,
 }: TaskCardProps) {
   const urgency = getDeadlineUrgency(task.deadline);
   const isCompleted = task.column === 'done';
@@ -38,9 +40,11 @@ export function TaskCard({
       onDragStart={(e) => onDragStart?.(e, task)}
       className={`
         group relative p-4 rounded-xl border transition-all cursor-grab active:cursor-grabbing
-        ${isCompleted
-          ? 'bg-[#1A1A1A]/60 border-[#252525] opacity-60'
-          : 'bg-[#1A1A1A] border-[#252525] hover:border-[#333333] hover:shadow-[0_4px_20px_rgba(99,102,241,0.1)]'
+        ${isDragging
+          ? 'opacity-50 scale-95 ring-2 ring-dashed ring-[#6366F1] bg-[#1A1A1A] border-transparent'
+          : isCompleted
+            ? 'bg-[#1A1A1A]/60 border-[#252525] opacity-60'
+            : 'bg-[#1A1A1A] border-[#252525] hover:border-[#333333] hover:shadow-[0_4px_20px_rgba(99,102,241,0.1)]'
         }
       `}
     >

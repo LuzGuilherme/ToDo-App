@@ -329,6 +329,7 @@ export function SupabaseKanbanBoard() {
                 onDrop={handleDrop}
                 isDragOver={dragOverColumn === columnId}
                 onAddTask={() => setIsModalOpen(true)}
+                draggedTaskId={draggedTask?.id ?? null}
               />
             </div>
           ))}

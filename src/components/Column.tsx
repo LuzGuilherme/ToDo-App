@@ -14,6 +14,7 @@ interface ColumnProps {
   onDrop: (e: React.DragEvent, column: ColumnType) => void;
   isDragOver: boolean;
   onAddTask?: (column: ColumnType) => void;
+  draggedTaskId?: string | null;
 }
 
 export function Column({
@@ -27,8 +28,17 @@ export function Column({
   onDrop,
   isDragOver,
   onAddTask,
+  draggedTaskId,
 }: ColumnProps) {
   const config = COLUMN_CONFIG[columnId];
+
+  // Column-specific accent colors for drag-over effect
+  const dragOverStyles: Record<ColumnType, string> = {
+    today: 'bg-[#6366F1]/15 ring-2 ring-[#6366F1]/50',
+    this_week: 'bg-[#A855F7]/15 ring-2 ring-[#A855F7]/50',
+    later: 'bg-[#6B7280]/15 ring-2 ring-[#6B7280]/50',
+    done: 'bg-[#22C55E]/15 ring-2 ring-[#22C55E]/50',
+  };
 
   return (
     <div
@@ -38,7 +48,7 @@ export function Column({
         flex flex-col min-w-[300px] max-w-[340px] flex-1
         rounded-xl transition-all overflow-hidden
         ${isDragOver
-          ? 'bg-[#6366F1]/10 ring-2 ring-[#6366F1]/40'
+          ? `${dragOverStyles[columnId]} scale-[1.01]`
           : 'bg-[#141414] border border-[#1F1F1F]'
         }
       `}
@@ -81,6 +91,7 @@ export function Column({
               onDelete={onDeleteTask}
               onComplete={onCompleteTask}
               onDragStart={onDragStart}
+              isDragging={draggedTaskId === task.id}
             />
           ))
         )}
